@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{{.Title}} - Restic Browser</title>
+        <style>
+            body {
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: #f5f5f5;
+                color: #333;
+            }
+
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+
+            .header {
+                background-color: #2c3e50;
+                color: white;
+                padding: 1rem 0;
+                margin-bottom: 2rem;
+            }
+
+            .header h1 {
+                margin: 0;
+                text-align: center;
+                font-size: 2rem;
+            }
+
+            .nav {
+                background-color: #34495e;
+                padding: 0.5rem 0;
+            }
+
+            .nav ul {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                justify-content: center;
+            }
+
+            .nav li {
+                margin: 0 1rem;
+            }
+
+            .nav a {
+                color: white;
+                text-decoration: none;
+                padding: 0.5rem 1rem;
+                border-radius: 4px;
+                transition: background-color 0.3s;
+            }
+
+            .nav a:hover {
+                background-color: #2c3e50;
+            }
+
+            .card {
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                padding: 1.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .btn {
+                display: inline-block;
+                padding: 0.5rem 1rem;
+                background-color: #3498db;
+
+                color: white;
+                text-decoration: none;
+                border-radius: 4px;
+                border: none;
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
+
+            .btn:hover {
+                background-color: #2980b9;
+            }
+
+            .btn-small {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.8rem;
+            }
+
+            .btn-secondary {
+                background-color: #95a5a6;
+            }
+
+            .btn-secondary:hover {
+                background-color: #7f8c8d;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 1rem;
+            }
+
+            th,
+            td {
+                padding: 0.75rem;
+                text-align: left;
+                border-bottom: 1px solid #ddd;
+            }
+
+            th {
+                background-color: #f8f9fa;
+                font-weight: 600;
+            }
+
+            tr:hover {
+                background-color: #f8f9fa;
+            }
+
+            .breadcrumb {
+                background-color: #ecf0f1;
+                padding: 0.5rem 1rem;
+                border-radius: 4px;
+                margin-bottom: 1rem;
+            }
+
+            .breadcrumb a {
+                color: #3498db;
+                text-decoration: none;
+            }
+
+            .breadcrumb a:hover {
+                text-decoration: underline;
+            }
+
+            .file-icon {
+                margin-right: 0.5rem;
+            }
+
+            .dir-icon::before {
+                content: "📁";
+            }
+
+            .file-icon::before {
+                content: "📄";
+            }
+
+            .info {
+                background-color: #3498db;
+                color: white;
+                padding: 1rem;
+                border-radius: 4px;
+                margin-bottom: 1rem;
+            }
+
+            .text-muted {
+                color: #7f8c8d;
+            }
+
+            .mb-2 {
+                margin-bottom: 1rem;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <div class="container">
+                <h1>Restic Repository Browser</h1>
+            </div>
+        </div>
+
+        <nav class="nav">
+            <div class="container">
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/snapshots">Snapshots</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="card">
+                <h2>Browse Files</h2>
+
+                {{if .Path}}
+                <div class="breadcrumb">
+                    <span>📍 Path: </span>
+                    <a href="/browse?snapshot={{.SnapshotID}}">Root</a>
+                    {{if ne .Path ""}} {{$snapshot := .SnapshotID}} {{$parts :=
+                    splitPath .Path}} {{$currentPath := ""}} {{range $i, $part
+                    := $parts}} {{$currentPath = joinPath $currentPath $part}} /
+                    <a
+                        href="/browse?snapshot={{$snapshot}}&path={{$currentPath}}"
+                        >{{$part}}</a
+                    >
+                    {{end}} {{end}}
+                </div>
+                {{else}}
+                <div class="breadcrumb">
+                    <span>📍 Path: Root</span>
+                </div>
+                {{end}}
+
+                <div class="mb-2">
+                    <span class="text-muted">Snapshot:</span>
+                    <code>{{.SnapshotID | printf "%.8s"}}</code>
+                    {{if ne .ParentPath .Path}}
+                    <a
+                        href="/browse?snapshot={{.SnapshotID}}&path={{.ParentPath}}"
+                        class="btn btn-secondary btn-small"
+                        style="margin-left: 1rem"
+                        >⬆️ Parent Directory</a
+                    >
+                    {{end}}
+                </div>
+
+                {{if .Files}}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Size</th>
+                            <th>Modified</th>
+                            <th>Permissions</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .Files}}
+                        <tr>
+                            <td>
+                                {{if eq .Type "dir"}}
+                                <span class="file-icon dir-icon"></span>
+                                <a
+                                    href="/browse?snapshot={{$.SnapshotID}}&path={{.Path}}"
+                                    >{{.Name}}</a
+                                >
+                                {{else}}
+                                <span class="file-icon"></span>
+                                {{.Name}} {{end}}
+                            </td>
+                            <td>
+                                {{if eq .Type "dir"}}
+                                <span style="color: #f39c12">Directory</span>
+                                {{else if eq .Type "file"}}
+                                <span style="color: #27ae60">File</span>
+                                {{else if eq .Type "symlink"}}
+                                <span style="color: #9b59b6">Symlink</span>
+                                {{else}} {{.Type}} {{end}}
+                            </td>
+                            <td>
+                                {{if eq .Type "dir"}}
+                                <span class="text-muted">-</span>
+                                {{else}} {{formatBytes .Size}} {{end}}
+                            </td>
+                            <td>{{.ModTime.Format "2006-01-02 15:04"}}</td>
+                            <td><code>{{.Mode}}</code></td>
+                            <td>
+                                {{if eq .Type "dir"}}
+                                <a
+                                    href="/browse?snapshot={{$.SnapshotID}}&path={{.Path}}"
+                                    class="btn btn-small"
+                                    >Open</a
+                                >
+                                {{else if eq .Type "file"}}
+                                <a
+                                    href="/download?snapshot={{$.SnapshotID}}&path={{.Path}}"
+                                    class="btn btn-small"
+                                    download
+                                    >Download</a
+                                >
+                                {{else}}
+                                <span class="text-muted">-</span>
+                                {{end}}
+                            </td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+                {{else}}
+                <div class="info">This directory is empty.</div>
+                {{end}}
+            </div>
+        </div>
+    </body>
+</html>
