@@ -125,6 +125,106 @@ To modify the templates or add features:
 
 The templates use Go's `html/template` package with custom helper functions for formatting.
 
+## Docker Usage
+
+### Building the Docker Image
+
+Build the Docker image from the project directory:
+
+```bash
+docker build -t restic-browser .
+```
+
+### Running with Environment Variables
+
+1. Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Edit `.env` with your restic repository details:
+   ```bash
+   # Required settings
+   RESTIC_REPO=/path/to/your/restic/repository
+   RESTIC_PASSWORD=your_repository_password_here
+   
+   # Optional settings
+   PORT=8081
+   ```
+
+3. Run the container with the environment file:
+   ```bash
+   docker run --env-file .env -p 8081:8081 restic-browser
+   ```
+
+### Running with Direct Environment Variables
+
+You can also pass environment variables directly:
+
+```bash
+docker run -e RESTIC_REPO="/backup/repo" \
+           -e RESTIC_PASSWORD="your_password" \
+           -e PORT="8081" \
+           -p 8081:8081 \
+           restic-browser
+```
+
+### Volume Mounting for Local Repositories
+
+If your restic repository is stored locally, mount it as a volume:
+
+```bash
+docker run --env-file .env \
+           -v /host/path/to/repo:/backup/repo:ro \
+           -p 8081:8081 \
+           restic-browser
+```
+
+Make sure your `RESTIC_REPO` in the `.env` file matches the container path (e.g., `/backup/repo`).
+
+### Remote Repository Examples
+
+**SFTP Repository:**
+```bash
+# In your .env file:
+RESTIC_REPO=sftp:user@host:/backup/repo
+RESTIC_PASSWORD=your_password
+```
+
+**S3 Repository:**
+```bash
+# In your .env file:
+RESTIC_REPO=s3:s3.amazonaws.com/your-bucket
+RESTIC_PASSWORD=your_password
+AWS_ACCESS_KEY_ID=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_key
+```
+
+### Environment Variables Reference
+
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `RESTIC_REPO` | Path or URL to your restic repository | Yes | - |
+| `RESTIC_PASSWORD` | Repository password | Yes | - |
+| `PORT` | Port for the web interface | No | 8081 |
+
+Additional restic-specific environment variables (AWS, Azure, B2, etc.) are supported as needed for your repository type.
+
+### Health Check
+
+The Docker image includes a health check that verifies the web service is responding. You can check the container health status with:
+
+```bash
+docker ps
+```
+
+### Security Notes for Docker
+
+- The container runs as a non-root user for security
+- Repository passwords are handled via environment variables (more secure than command-line arguments)
+- Consider using Docker secrets or external secret management for production deployments
+- The container exposes the service on all interfaces - use appropriate network security
+
 ## License
 
 This project is provided as-is for educational and personal use.

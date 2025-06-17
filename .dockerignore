@@ -1,0 +1,53 @@
+# Ignore built binaries
+restic-browser
+*.exe
+
+# Ignore Git files
+.git
+.gitignore
+
+# Ignore documentation (except README.md which might be needed)
+*.md
+!README.md
+
+# Ignore test files
+*_test.go
+test-*
+*.test
+
+# Ignore environment files
+.env
+.env.*
+!.env.example
+
+# Ignore IDE/editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore temporary files
+*.tmp
+*.temp
+*.log
+
+# Ignore Docker files (we don't need them in the build context)
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.yaml
+
+# Ignore backup/cache directories
+.cache/
+backup/
+tmp/
+
+# Ignore other common files
+*.pid
+*.seed
+*.pid.lock
